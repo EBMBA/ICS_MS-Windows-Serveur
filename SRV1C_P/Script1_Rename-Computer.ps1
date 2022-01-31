@@ -1,4 +1,4 @@
-$NameComputer = "SRV1C_P"
+$NameComputer = "SRV1C-P"
 
 Rename-Computer -NewName $NameComputer -Force
 Restart-Computer

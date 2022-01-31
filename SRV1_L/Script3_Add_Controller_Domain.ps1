@@ -21,20 +21,5 @@ Foreach($Feature in $FeatureList){
    } 
 } # Foreach($Feature in $FeatureList)
 
-$DomainConfiguration = @{
-    '-DatabasePath'= 'C:\Windows\NTDS';
-    '-DomainName' = $DomainNameDNS;
-    '-NoGlobalCatalog' = $false;
-    '-SiteName' = 'Default-First-Site-Name';
-    '-CriticalReplicationOnly' =$false;
-    '-InstallDns' = $true;
-    '-LogPath' = 'C:\Windows\NTDS';
-    '-NoRebootOnCompletion' = $false;
-    '-Readonlyreplica' = $true;
-    '-ReplicationSourceDC' = 'CD.ESN.dom';
-    '-SysvolPath' = 'C:\Windows\SYSVOL';
-    '-Force' = $true;
-    '-CreateDnsDelegation' = $false }
-
 Import-Module ADDSDeployment
-Install-ADDSDomainController @DomainConfiguration  -Credential (Get-Credential $DomaineNameNetbios\Administrator)
+Install-ADDSDomainController -Credential (Get-Credential $DomaineNameNetbios\Administrator) -DomainName $DomainNameDNS -InstallDNS:$true -ReadOnlyReplica:$true -SiteName "Default-First-Site-Name" -Force:$true
