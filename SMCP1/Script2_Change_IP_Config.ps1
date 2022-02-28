@@ -1,4 +1,4 @@
-$IPAddress = "172.31.1.3"
+$IPAddress = "172.31.1.2"
 $Prefix = "24"
 $Gateway = "172.31.1.254"
 $IPAddressDNS = "172.31.2.1"
