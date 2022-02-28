@@ -98,6 +98,7 @@ $sites=('Lyon','Paris')
 $services=('Informatique','Direction','Recherche et Developpement','Administration','Accueil','Ressources Humaines','Serveurs')
 $materiels=('Ordinateurs Fixes','Ordinateurs Portables','Imprimantes')
 $FirstOU ="Sites"
+[byte[]]$horaire = @(0,0,128,255,255,255,255,255,255,255,255,255,255,255,255,255,255,127,0,0,0)
 
 #endregions
 $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -115,13 +116,11 @@ foreach ($S in $sites) {
             foreach ($Materiel in $materiels) {
                 New-ADOrganizationalUnit -Name $Materiel -Description "$S $Serv $Materiel"  -Path "OU=Materiels,OU=$Serv,OU=$S,OU=$FirstOU,DC=$Dom,DC=$EXT" -ProtectedFromAccidentalDeletion $false
             }
+            
+            $Employees = New-RandomUser -Amount 30 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
 
-            switch ($Serv) {
-                'Recherche et Developpement'{
-                    $Employees = New-RandomUser -Amount 30 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Employees) 
-                        {
+            foreach ($user in $Employees) 
+            {
                             #New Password
                             $userPassword = New-Password
 
@@ -148,11 +147,6 @@ foreach ($S in $sites) {
                             {
                                 New-Item -Path "c:\$S\$Serv\Employes" -ItemType Directory | Out-Null
                             }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
 
                             $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
 
@@ -196,903 +190,86 @@ foreach ($S in $sites) {
 
                             New-ADUser @newUserProperties
                             
-                        }
-
-                        $Manager = New-RandomUser -Amount 2 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Manager) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Manager $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Manager"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Manager" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Manager\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                        }
-                }
-
-                'Administration'{
-                    $Employees = New-RandomUser -Amount 30 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Employees) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Employé $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Employes"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Employes" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Employes\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                            
-                        }
-
-                        $Manager = New-RandomUser -Amount 2 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Manager) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Manager $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Manager"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Manager" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Manager\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                        }
-
-                        
-                }
-
-                'Accueil'{
-                    $Employees = New-RandomUser -Amount 30 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Employees) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Employé $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Employes"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Employes" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Employes\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                            
-                        }
-                        $Manager = New-RandomUser -Amount 2 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Manager) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Manager $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Manager"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Manager" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Manager\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                        }
-
-                }
-
-                'Informatique'{
-                    $Employees = New-RandomUser -Amount 30 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Employees) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Employé $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Employes"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Employes" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Employes\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                            
-                        }
-                    
-                        $Manager = New-RandomUser -Amount 2 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Manager) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Manager $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Manager"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Manager" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Manager\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                        }
-
-                }
-
-                'Ressources Humaines'{
-                    $Employees = New-RandomUser -Amount 30 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Employees) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Employé $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Employes"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Employes" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Employes\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                            
-                        }
-                    
-                        $Manager = New-RandomUser -Amount 2 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Manager) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Manager $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Manager"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Manager" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Manager\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                        }
-
-                }
-
-                'Direction'{
-                    $Employees = New-RandomUser -Amount 30 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Employees) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Employé $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Employes"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Employes" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Employes\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                            
-                        }
-                    
-                        $Manager = New-RandomUser -Amount 2 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
-
-                        foreach ($user in $Manager) 
-                        {
-                            #New Password
-                            $userPassword = New-Password
-
-                            $newUserProperties = @{
-                                Name = "$($user.name.first) $($user.name.last)"
-                                City = "$S"
-                                GivenName = $user.name.first
-                                Surname = $user.name.last
-                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
-                                title = "Manager $Serv"
-                                department="$Serv"
-                                OfficePhone = $user.phone
-                                MobilePhone = $user.cell
-                                Company="$Dom"
-                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
-                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
-                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
-                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
-                                Enabled = $true
-                                CannotChangePassword = $true
-                            }
-                            
-                             if(!(Test-Path -Path "c:\$S\$Serv\Manager"))
-                            {
-                                New-Item -Path "c:\$S\$Serv\Manager" -ItemType Directory | Out-Null
-                            }
-                            else
-                            {
-                                #"The directory exist" 
-                            }
-
-
-                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
-
-                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
-               
-                            $FilePathInvoice  = "c:\$S\$Serv\Manager\$($user.name.last) $($user.name.first).docx"
-                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
-
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
-                            -FontSize 12, 13 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingBefore 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -Supress $True
-
-                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
-                            -FontSize 12, 10 `
-                            -Color  Black, Blue `
-                            -Bold  $false, $true `
-                            -SpacingAfter 15 `
-                            -Supress $True
-        
-                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
-                            -FontSize 12 `
-                            -Supress $True
-
-                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
-
-                            New-ADUser @newUserProperties
-                        }
-
-                }
-                Default {}
+                            # Hour : Connection during the week-end are forbiden 
+                            Set-ADUser -Identity $($newUserProperties.SamAccountName)  -Replace:@{logonHours=$horaire}
             }
+
+            $Manager = New-RandomUser -Amount 2 -Nationality fr -IncludeFields name,dob,phone,cell -ExcludeFields picture | Select-Object -ExpandProperty results
+
+            foreach ($user in $Manager) 
+            {
+                            #New Password
+                            $userPassword = New-Password
+
+                            $newUserProperties = @{
+                                Name = "$($user.name.first) $($user.name.last)"
+                                City = "$S"
+                                GivenName = $user.name.first
+                                Surname = $user.name.last
+                                Path = "OU=$Serv,OU=$S,OU=$FirstOU,dc=$Dom,dc=$EXT"
+                                title = "Manager $Serv"
+                                department="$Serv"
+                                OfficePhone = $user.phone
+                                MobilePhone = $user.cell
+                                Company="$Dom"
+                                EmailAddress="$($user.name.first).$($user.name.last)@$($fulldomain)"
+                                AccountPassword = (ConvertTo-SecureString $userPassword -AsPlainText -Force)
+                                SamAccountName = $($user.name.first).Substring(0,1)+$($user.name.last)
+                                UserPrincipalName = "$(($user.name.first).Substring(0,1)+$($user.name.last))@$($fulldomain)"
+                                Enabled = $true
+                                CannotChangePassword = $true
+                            }
+                            
+                             if(!(Test-Path -Path "c:\$S\$Serv\Manager"))
+                            {
+                                New-Item -Path "c:\$S\$Serv\Manager" -ItemType Directory | Out-Null
+                            }
+
+                            $FilePathTemplate = "C:\Users\Administrator\Desktop\Template.docx"
+
+                            $WordDocument = Get-WordDocument -FilePath $FilePathTemplate
+               
+                            $FilePathInvoice  = "c:\$S\$Serv\Manager\$($user.name.last) $($user.name.first).docx"
+                            Add-WordText -WordDocument $WordDocument -Text 'Creation de Compte' -FontSize 15 -HeadingType  Heading1 -FontFamily 'Arial' -Italic $true | Out-Null
+
+
+                            Add-WordText -WordDocument $WordDocument -Text 'Voici les informations qui vous permettrons de vous connecter au Domaine Active Directory', " $fulldomain" `
+                            -FontSize 12, 13 `
+                            -Color  Black, Blue `
+                            -Bold  $false, $true `
+                            -SpacingBefore 15 `
+                            -Supress $True
         
+                            Add-WordText -WordDocument $WordDocument -Text 'Login : ', "$(($user.name.first).Substring(0,1)+$($user.name.last))" `
+                            -FontSize 12, 10 `
+                            -Color  Black, Blue `
+                            -Bold  $false, $true `
+                            -Supress $True
+
+                            Add-WordText -WordDocument $WordDocument -Text 'Mot de passe : ',"$userPassword" `
+                            -FontSize 12, 10 `
+                            -Color  Black, Blue `
+                            -Bold  $false, $true `
+                            -Supress $True
+
+                            Add-WordText -WordDocument $WordDocument -Text 'Adresse de messagerie : ',"$($user.name.first).$($user.name.last)@$($fulldomain)" `
+                            -FontSize 12, 10 `
+                            -Color  Black, Blue `
+                            -Bold  $false, $true `
+                            -SpacingAfter 15 `
+                            -Supress $True
         
+                            Add-WordText -WordDocument $WordDocument -Text "Le Service Informatique." `
+                            -FontSize 12 `
+                            -Supress $True
+
+                            Save-WordDocument -WordDocument $WordDocument -FilePath $FilePathInvoice -Supress $true  -Language 'fr-FR'
+
+                            New-ADUser @newUserProperties
+            }
     }
 }
 
-Write-Host "Nous avons créer $user Utilisateurs et $OU OU soit $Object Objects. "
+Write-Host "Nous avons créer  Utilisateurs et $OU OU soit $Object Objects. "
 $sw.stop
 $sw.Elapsed
