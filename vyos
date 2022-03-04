@@ -5,5 +5,8 @@ set interfaces ethernet eth2 address dhcp
 
 set nat source rule 100 outbound-interface eth2
 set nat source rule 100 source address '172.31.1.0/24'
-set nat source rule 100 source address '172.31.2.0/24'
 set nat source rule 100 translation address masquerade
+
+set nat source rule 101 outbound-interface eth2
+set nat source rule 101 source address '172.31.2.0/24'
+set nat source rule 101 translation address masquerade
