@@ -42,3 +42,33 @@ Get-ADUser -LDAPFilter "(title=Manager*)" | Add-ADPrincipalGroupMembership -Memb
 New-ADGroup -Name "G_Employes" -DisplayName "G_Employes" -GroupScope Global -GroupCategory Security -Path "OU=Globaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" -Description "Groupe Employes"
 Get-ADUser -LDAPFilter "(title=Employé*)"  | Add-ADPrincipalGroupMembership -MemberOf "G_Employes"  
 
+foreach($site in $sites){
+    Write-Host "Creations des groupes Globaux et Groupes de Domaines Locaux" -ForegroundColor Magenta
+    Write-Host ""
+
+    foreach ($item in $services) {
+            $i=$item.Replace(" ","_")
+    
+            Write-Host "Creation des groupes de Domaine Locaux DL_$i`_$site`_L , DL_$i`_$site`_LM DL_$i`_$site`_CT pour le service $i du site $site" -ForegroundColor Magenta
+            Write-Host ""
+            
+            New-ADGroup -Name  "DL_$i`_$site`_L" -DisplayName  "DL_$i`_$site`_L" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT"  -Description "Groupe Domaine Locaux $i Lecture"
+
+            New-ADGroup -Name  "DL_$i`_$site`_LM" -DisplayName  "DL_$i`_$site`_LM" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT"  -Description "Groupe Domaine Locaux $i Lecture et Modification"
+
+            New-ADGroup -Name  "DL_$i`_$site`_CT" -DisplayName  "DL_$i`_$site`_CT" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" -Description "Groupe Domaine Locaux $i Controle Totale"
+    }
+    Write-Host "Creation des groupes de Domaine Locaux DL_$site`_L , DL_$site`_LM DL_$site`_CT pour le site $site" -ForegroundColor Magenta
+    
+    New-ADGroup -Name  "DL_$site`_L" -DisplayName  "DL_$site`_L" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT"  -Description "Groupe Domaine Locaux $site Lecture"
+
+    New-ADGroup -Name  "DL_$site`_LM" -DisplayName  "DL_$site`_LM" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT"  -Description "Groupe Domaine Locaux $site Lecture et Modification"
+
+    New-ADGroup -Name  "DL_$site`_CT" -DisplayName  "DL_$site`_CT" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" -Description "Groupe Domaine Locaux $site Controle Totale"
+}
+
+New-ADGroup -Name  "DL_Total_Ressources" -DisplayName  "DL_Total_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT"
+Add-ADGroupMember -Identity "DL_Total_Ressources" -Members 
+New-ADGroup -Name  "DL_Lecture_Ressources" -DisplayName  "DL_Lecture_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" 
+New-ADGroup -Name  "DL_Refuser_Ressources" -DisplayName  "DL_Refuser_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" 
+
