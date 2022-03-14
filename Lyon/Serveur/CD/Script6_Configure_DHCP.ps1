@@ -12,17 +12,17 @@ $Scopes = @{
     sites = @{
         'Lyon' = @{
             Mask = "255.255.255.0"
-            Network = "172.31.1.0"
-            StartRange = "172.31.1.100"
-            EndRange = "172.31.1.253"
-            Gateway = "172.31.1.254"
-        }
-        'Paris' = @{
-            Mask = "255.255.255.0"
             Network = "172.31.2.0"
             StartRange = "172.31.2.100"
             EndRange = "172.31.2.253"
-            Gateway = "172.31.2.254" 
+            Gateway = "172.31.2.254"
+        }
+        'Paris' = @{
+            Mask = "255.255.255.0"
+            Network = "172.31.1.0"
+            StartRange = "172.31.1.100"
+            EndRange = "172.31.1.253"
+            Gateway = "172.31.1.254" 
         }
     }
     AdresseDNS = "172.31.2.1"
