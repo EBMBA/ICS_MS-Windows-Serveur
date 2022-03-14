@@ -41,7 +41,7 @@ Get-ADUser -LDAPFilter "(title=Manager*)" | Add-ADPrincipalGroupMembership -Memb
 
 New-ADGroup -Name "G_Employes" -DisplayName "G_Employes" -GroupScope Global -GroupCategory Security -Path "OU=Globaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" -Description "Groupe Employes"
 Get-ADUser -LDAPFilter "(title=Employé*)"  | Add-ADPrincipalGroupMembership -MemberOf "G_Employes"  
-
+<#
 foreach($site in $sites){
     Write-Host "Creations des groupes Globaux et Groupes de Domaines Locaux" -ForegroundColor Magenta
     Write-Host ""
@@ -67,8 +67,29 @@ foreach($site in $sites){
     New-ADGroup -Name  "DL_$site`_CT" -DisplayName  "DL_$site`_CT" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" -Description "Groupe Domaine Locaux $site Controle Totale"
 }
 
-New-ADGroup -Name  "DL_Total_Ressources" -DisplayName  "DL_Total_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT"
-Add-ADGroupMember -Identity "DL_Total_Ressources" -Members 
-New-ADGroup -Name  "DL_Lecture_Ressources" -DisplayName  "DL_Lecture_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" 
-New-ADGroup -Name  "DL_Refuser_Ressources" -DisplayName  "DL_Refuser_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" 
 
+#>
+
+New-ADGroup -Name  "DL_Total_Ressources" -DisplayName  "DL_Total_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT"
+Get-ADGroup -LDAPFilter "(cn= G_Responsables*)" | Add-ADPrincipalGroupMembership -MemberOf  "DL_Total_Ressources"
+Get-ADGroup -LDAPFilter "(cn= G_*_Direction)"| Add-ADPrincipalGroupMembership -MemberOf  "DL_Total_Ressources"
+
+New-ADGroup -Name  "DL_Lecture_Ressources" -DisplayName  "DL_Lecture_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" 
+Get-ADGroup -LDAPFilter "(cn= G_*_Administration)" | Add-ADPrincipalGroupMembership -MemberOf  "DL_Lecture_Ressources"
+Get-ADGroup -LDAPFilter "(cn= G_*_Accueil)" | Add-ADPrincipalGroupMembership -MemberOf  "DL_Lecture_Ressources"
+Get-ADGroup -LDAPFilter "(cn= G_*_Informatique)"| Add-ADPrincipalGroupMembership -MemberOf  "DL_Lecture_Ressources"
+
+New-ADGroup -Name  "DL_Refuser_Ressources" -DisplayName  "DL_Refuser_Ressources" -GroupScope DomainLocal -GroupCategory Security -Path "OU=Domaines Locaux,OU=Groupes,OU=Sites,DC=$Dom,DC=$EXT" 
+Get-ADGroup -LDAPFilter "(cn= G_*_Recherche_et_Developpement)"| Add-ADPrincipalGroupMembership -MemberOf  "DL_Refuser_Ressources"
+
+Get-ADUser -LDAPFilter "(&(title=Manager*)(department=Informatique))"  | Add-ADPrincipalGroupMembership -MemberOf "Domain Admins"
+
+$Groups = ("Print Operators","Server Operators", "Account Operators", "Backup Operators")
+foreach ($Group in $Groups) {
+    $(Get-ADUser -LDAPFilter "(&(title=Employé*)(department=Informatique))")[0] | Add-ADPrincipalGroupMembership -MemberOf "$Group"
+}
+
+$Groups = ("Event Log Readers","Performance Monitor Users", "Performance Log Users")
+foreach ($Group in $Groups) {
+    $(Get-ADUser -LDAPFilter "(&(title=Employé*)(department=Informatique))")[1] | Add-ADPrincipalGroupMembership -MemberOf "$Group"
+}
